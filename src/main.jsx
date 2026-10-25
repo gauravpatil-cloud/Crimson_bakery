@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ArrowRight, ArrowUpRight, Search, Heart, ShoppingBag, Menu, X, Star,
@@ -29,6 +29,30 @@ const categories = [
 ];
 
 function App() {
+  useEffect(() => {
+    const targets = document.querySelectorAll('.section-intro, .category-card, .story-photo, .story-copy, .product-card, .custom-content, .custom-aside > div, .mosaic-item, .review-card, .contact-copy, .contact-details > a');
+    targets.forEach((el, index) => {
+      el.classList.add('motion-reveal');
+      el.style.setProperty('--reveal-delay', `${(index % 4) * 75}ms`);
+    });
+    if (!('IntersectionObserver' in window)) {
+      targets.forEach(el => el.classList.add('is-visible'));
+      return;
+    }
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+    }), { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+    targets.forEach(el => observer.observe(el));
+    const hero = document.querySelector('.hero');
+    const onMove = event => {
+      if (!hero || window.matchMedia('(pointer: coarse)').matches) return;
+      const rect = hero.getBoundingClientRect();
+      hero.style.setProperty('--pointer-x', `${event.clientX - rect.left}px`);
+      hero.style.setProperty('--pointer-y', `${event.clientY - rect.top}px`);
+    };
+    hero?.addEventListener('pointermove', onMove);
+    return () => { observer.disconnect(); hero?.removeEventListener('pointermove', onMove); };
+  }, []);
   const [cart, setCart] = useState([]);
   const [saved, setSaved] = useState([]);
   const [activeCategory, setActiveCategory] = useState('All');
